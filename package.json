@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "hardhat node",
+    "build": "hardhat compile",
+    "deploy": "hardhat ignition deploy ./ignition/modules/SampleToken.ts --network localhost"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +13,7 @@
   "description": "",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
     "hardhat": "^2.22.6"
   }
 }
