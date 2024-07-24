@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "hardhat node",
-    "build": "hardhat compile",
+    "build": "hardhat compile && wagmi generate",
     "deploy": "hardhat ignition deploy ./ignition/modules/SampleToken.ts --network localhost"
   },
   "keywords": [],
