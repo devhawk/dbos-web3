@@ -6,9 +6,9 @@ exports.up = async function(knex) {
     table.text('from').notNullable();
     table.text('to').notNullable();
     table.bigint('amount').notNullable();
-    table.text('block_hash').notNullable();
-    table.bigint('block_number').notNullable();
-    table.text('transaction_hash').notNullable();
+    table.text('block_hash');
+    table.bigint('block_number');
+    table.text('transaction_hash');
   });
 
   return knex.schema.createTable('accounts', table => {

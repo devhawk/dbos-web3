@@ -10,6 +10,16 @@ export interface Account {
   balance: bigint;
 }
 
+export interface Transfer {
+  id: number,
+  from: string,
+  to: string,
+  amount: bigint,
+  block_hash: string | null,
+  block_number: bigint | null,
+  transaction_hash: string | null,
+}
+
 type TransferEventArgs = ContractEventArgsFromTopics<typeof erc20Abi, "Transfer">;
 
 export class TokenWatcher {
@@ -25,6 +35,20 @@ export class TokenWatcher {
     const event = decodeEventLog({ ...log, abi: erc20Abi, eventName: 'Transfer' });
     ctx.logger.info(`logWorkflow: ${ctx.workflowUUID}`);
     await ctx.invoke(TokenWatcher).updateBalance(event.args);
+    await ctx.invoke(TokenWatcher).logTransaction(log, event.args);
+  }
+
+  @Transaction()
+  static async logTransaction(ctx: TransactionContext<Knex>, log: Log, args: TransferEventArgs) {
+    ctx.logger.info(`logTransaction: ${log.blockNumber} ${log.transactionHash} `);
+    await ctx.client<Transfer>('transfers').insert({
+      from: args.from,
+      to: args.to,
+      amount: args.value,
+      block_hash: log.blockHash,
+      block_number: log.blockNumber,
+      transaction_hash: log.transactionHash,
+    });
   }
 
   @Transaction()
