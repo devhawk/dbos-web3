@@ -4,7 +4,6 @@ import { Web3LogReceiver, Web3Receiver } from './web3Receiver';
 import { ContractEventArgsFromTopics, decodeEventLog, DecodeEventLogReturnType, erc20Abi, Log } from 'viem';
 import { hardhat } from 'viem/chains'
 
-// The schema of the database table used in this example.
 export interface Account {
   address: string;
   balance: bigint;
@@ -24,6 +23,10 @@ type TransferEventArgs = ContractEventArgsFromTopics<typeof erc20Abi, "Transfer"
 
 export class TokenWatcher {
 
+  // Create a workflow that listens for SampleToken Transfer events
+  // Note, an improved version of Web3LogReceiver would allow these fields to be retrieved 
+  //       from DBOS Configuration (https://docs.dbos.dev/api-reference/configuration)
+  //       instead of being hard coded.
   @Web3LogReceiver({
     chain: hardhat,
     transport: "http",
@@ -32,25 +35,17 @@ export class TokenWatcher {
   })
   @Workflow()
   static async logWorkflow(ctx: WorkflowContext, log: Log) {
-    const event = decodeEventLog({ ...log, abi: erc20Abi, eventName: 'Transfer' });
     ctx.logger.info(`logWorkflow: ${ctx.workflowUUID}`);
+
+    // Web3LogReceiver calls the workflow method with the raw log object, so we need to decode it 
+    const event = decodeEventLog({ ...log, abi: erc20Abi, eventName: 'Transfer' });
+
+    // update the database with the transfer event args
     await ctx.invoke(TokenWatcher).updateBalance(event.args);
     await ctx.invoke(TokenWatcher).logTransaction(log, event.args);
   }
 
-  @Transaction()
-  static async logTransaction(ctx: TransactionContext<Knex>, log: Log, args: TransferEventArgs) {
-    ctx.logger.info(`logTransaction: ${log.blockNumber} ${log.transactionHash} `);
-    await ctx.client<Transfer>('transfers').insert({
-      from: args.from,
-      to: args.to,
-      amount: args.value,
-      block_hash: log.blockHash,
-      block_number: log.blockNumber,
-      transaction_hash: log.transactionHash,
-    });
-  }
-
+  // this transaction method creates a local copy of SampleToken account balances in the off-chain database
   @Transaction()
   static async updateBalance(ctx: TransactionContext<Knex>, args: TransferEventArgs) {
     ctx.logger.info(`updateBalance: ${args.from} -> ${args.to} : ${args.value}`);
@@ -73,5 +68,19 @@ export class TokenWatcher {
       from: from[0].balance,
       to: to[0].balance,
     };
+  }
+
+  // this transaction method merely logs the transfer event to the database
+  @Transaction()
+  static async logTransaction(ctx: TransactionContext<Knex>, log: Log, args: TransferEventArgs) {
+    ctx.logger.info(`logTransaction: ${log.blockNumber} ${log.transactionHash} `);
+    await ctx.client<Transfer>('transfers').insert({
+      from: args.from,
+      to: args.to,
+      amount: args.value,
+      block_hash: log.blockHash,
+      block_number: log.blockNumber,
+      transaction_hash: log.transactionHash,
+    });
   }
 }

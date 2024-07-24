@@ -1,25 +1,20 @@
+/*
+    This code implements a DBOSEventReceiver that listens to events on an Ethereum blockchain.
+    It uses the viem (https://viem.sh/) library to interact with Ethereum.
+
+    Typically, this would be packaged as a separate library so that it could be shared across multiple projects.
+    The library would be published to NPM.js and installed as a dependency in each project.
+*/
+
 import {
     Error as DBOSError,
-    DBOSEventReceiver,
-    DBOSExecutorContext,
-    WorkflowContext,
-    WorkflowFunction,
-    associateClassWithEventReceiver,
-    associateMethodWithEventReceiver,
+    DBOSEventReceiver, DBOSExecutorContext,
+    WorkflowContext, WorkflowFunction,
+    associateClassWithEventReceiver, associateMethodWithEventReceiver,
 } from '@dbos-inc/dbos-sdk';
 import {
-    createPublicClient,
-    http,
-    parseAbiItem,
-    webSocket
-} from 'viem'
-import type {
-    AbiEvent,
-    Address,
-    Chain,
-    HttpTransportConfig,
-    Log,
-    WebSocketTransportConfig,
+    createPublicClient, http, parseAbiItem, webSocket,
+    AbiEvent, Address, Chain, HttpTransportConfig, Log, WebSocketTransportConfig,
 } from 'viem'
 import { formatAbiItem } from 'viem/utils';
 
@@ -48,7 +43,7 @@ function getClient(config: Web3ClientConfig) {
     }
 }
 
-interface Web3ReceiverConfig extends Web3ClientConfig{
+interface Web3ReceiverConfig extends Web3ClientConfig {
     address?: Address | Address[];
     event?: AbiEvent | string;
 }
@@ -95,21 +90,21 @@ export class Web3Receiver implements DBOSEventReceiver {
             if (!method.workflowConfig) {
                 throw new DBOSError.DBOSError(`Error registering method ${cname}.${mname}: An Web3Receiver decorator can only be assigned to a workflow!`)
             }
-            
+
             const chain = methodConfig.config?.chain ?? classConfig.config?.chain;
-            if (!chain) { 
-                throw new DBOSError.DBOSError(`Error registering method ${cname}.${mname}: chain is required!`) 
+            if (!chain) {
+                throw new DBOSError.DBOSError(`Error registering method ${cname}.${mname}: chain is required!`)
             }
             const transport = methodConfig.config?.transport ?? classConfig.config?.transport;
             if (!transport) {
                 throw new DBOSError.DBOSError(`Error registering method ${cname}.${mname}: transport is required!`)
             }
-            const client = getClient({ 
-                chain, 
-                transport, 
-                url: methodConfig.config?.url ?? classConfig.config?.url, 
-                httpConfig: methodConfig.config?.httpConfig ?? classConfig.config?.httpConfig, 
-                wsConfig: methodConfig.config?.wsConfig ?? classConfig.config?.wsConfig 
+            const client = getClient({
+                chain,
+                transport,
+                url: methodConfig.config?.url ?? classConfig.config?.url,
+                httpConfig: methodConfig.config?.httpConfig ?? classConfig.config?.httpConfig,
+                wsConfig: methodConfig.config?.wsConfig ?? classConfig.config?.wsConfig
             });
 
             const address = methodConfig.config?.address ?? classConfig.config?.address;
@@ -140,7 +135,7 @@ export class Web3Receiver implements DBOSEventReceiver {
     logRegisteredEndpoints(): void {
         if (!this.executor) return;
         const logger = this.executor.logger;
-        logger.info("Viem receiver endpoints:");
+        logger.info("Web3 receiver endpoints:");
         const regops = this.executor.getRegistrationsFor(this);
         regops.forEach((registeredOperation) => {
             const classConfig = registeredOperation.classConfig as Web3ReceiverClassConfig;
